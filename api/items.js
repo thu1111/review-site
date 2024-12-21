@@ -12,8 +12,8 @@ router.get("/", async(req,res,next)=>{
 })
 
 router.get("/:id",async(req,res,next)=>{
+  const id = +req.params.id;
     try {
-        const id = +req.params.id;
         const item = await prisma.item.findUnique({where:{id}});
         res.json(item);
     } catch (error) {
@@ -21,13 +21,13 @@ router.get("/:id",async(req,res,next)=>{
     }
 })
 
-/** Returns all reviews given by the author with the specified id. WORKS*/
+/** get all reviews given to a specified item id */
 //GET /api/items/:id/reviews
 router.get("/:id/reviews",async(req,res,next)=>{
+  const id = +req.params.id;
     try {
-        const id = +req.params.id;
         const reviews = await prisma.review.findMany({
-            where:{itemId: id}
+            where:{item_id: id}
         });
         res.json(reviews);
     } catch (error) {
@@ -35,18 +35,16 @@ router.get("/:id/reviews",async(req,res,next)=>{
     }
 })
 
-
-
-//GET /api/items/:itemId/reviews/:id WORKS
-router.get("/:itemId/reviews/:id", async (req, res, next) => {
+/** get a review based on id from a specified item id */
+//GET /api/items/:itemId/reviews/:id WORKS 
+router.get("/:item_id/reviews/:review_id", async (req, res, next) => {
+  const { item_id, review_id } = req.params;
   try {
-    const { itemId, id } = req.params;
     const review = await prisma.review.findFirst({
       where: {
-        id: parseInt(id),
-        itemId: parseInt(itemId),
-      },
-      include: { user: true, comments: true },
+        id: +review_id,
+        item_id: +item_id,
+      }
     });
     if (!review) return res.status(404).json({ message: "Review not found" });
     res.json(review);
@@ -55,64 +53,44 @@ router.get("/:itemId/reviews/:id", async (req, res, next) => {
   }
 });
 
-// // POST /api/items/:id/reviews WORKS
-// router.post("/:id/reviews", async (req, res, next) => {
-//   try {
-//     const itemId = parseInt(req.params.id);
-//     const { text, rating, userId } = req.body; // Assume `userId` is sent in request body for now.
-
-//     const review = await prisma.review.create({
-//       data: {
-//         text,
-//         rating,
-//         itemId,
-//         userId,
-//       },
-//     });
-//     res.status(201).json(review);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-// POST /api/items/:id/reviews
+/** add review to an item based on item id */
+// POST /api/items/:id/reviews (middleware later)
 router.post("/:id/reviews", async (req, res, next) => {
+  const item_id = +req.params.id;
+  const user_id = 1; // Assume `userId=1` is sent in request body for now  
+  const { rating,text  } = req.body; 
     try {
-      const itemId = parseInt(req.params.id);
-      const { text, rating, userId } = req.body; // Assume `userId` is sent in request body for now.
-  
-      const review = await prisma.review.create({
+      const addReview = await prisma.review.create({
         data: {
-          text,
-          rating,
-          itemId,
-          userId,
+          item_id,
+          user_id,
+          rating: +rating, //test in item-id 2
+          text, //test
         },
       });
-      res.status(201).json(review);
+      res.status(201).json(addReview);
     } catch (error) {
       next(error);
     }
   });
 
 
-
-
-// POST /api/items/:itemId/reviews/:id/comments
-router.post("/:itemId/reviews/:id/comments", async (req, res, next) => {
-  try {
-    const reviewId = parseInt(req.params.id);
-    const { text, userId } = req.body; // Assume `userId` is sent in request body for now.
-
-    const comment = await prisma.comment.create({
-      data: {
-        text,
-        reviewId,
-        userId,
-      },
-    });
-    res.status(201).json(comment);
-  } catch (error) {
-    next(error);
-  }
+/** add comment on a review based on review id and item id*/
+// POST /api/items/:itemId/reviews/:id/comments (middleware later)
+router.post("/:item_id/reviews/:review_id/comments", async (req, res, next) => {
+  const review_id = +req.params.review_id;
+  const user_id  = 1; // Assume `userId=1` is sent in request body for now
+  const { text } = req.body;
+    try {
+      const addComment = await prisma.comment.create({
+        data: {
+          user_id,
+          review_id,
+          text, //test
+        },
+      });
+      res.status(201).json(addComment);
+    } catch (error) {
+      next(error);
+    }
 });

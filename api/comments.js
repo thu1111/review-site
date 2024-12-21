@@ -13,15 +13,19 @@ router.get("/", async(req,res,next)=>{
 })
 
 
-
-// GET /api/comments/me
+/** get comments of a logged in user */
+// GET /api/comments/me  (middleware later)
 router.get("/me", async (req, res, next) => {
+  //const { id } = req.user; //req.user is set in verifyToken middleware
+  const id = 1; // Assume user id =1 is logged in for now
   try {
-    const { userId } = req.query; // Assume `userId` is sent as a query parameter for now.
-    const comments = await prisma.comment.findMany({
-      where: { userId: parseInt(userId) },
+    const comments = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        comments: true,
+      },
     });
-    res.json(comments);
+    res.status(201).json(comments);
   } catch (error) {
     next(error);
   }

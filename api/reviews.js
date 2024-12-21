@@ -21,14 +21,19 @@ router.get("/:id",async(req,res,next)=>{
     }
 })
 
-// GET /api/reviews/me
-router.get("/me", async (req, res, next) => {
+/** get reviews of a logged in user */
+// GET /api/reviews/me (middleware later)
+router.get("/me", async (req, res, next) => { //verifyToken here
+  //const { id } = req.user; //req.user is set in verifyToken middleware
+  const id = 1; // Assume user id =1 is logged in for now
   try {
-    const { userId } = req.query; // Assume `userId` is sent as a query parameter for now.
-    const reviews = await prisma.review.findMany({
-      where: { userId: parseInt(userId) },
+    const reviews = await prisma.user.findUnique({
+      where: {id},
+      select: {
+        reviews: true,
+      },
     });
-    res.json(reviews);
+    res.status(201).json(reviews);
   } catch (error) {
     next(error);
   }

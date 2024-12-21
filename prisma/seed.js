@@ -26,18 +26,18 @@ const seed = async () => {
 
     const createReviews = async()=>{
     const reviews = [
-        {user_id:1, item_id:1, rating:1, text:"Very Bad",},
-        {user_id:2, item_id:2, rating:2, text:"Not Working",},
-        {user_id:3, item_id:3, rating:3, text:"Works for me",},
+        {user_id:1, item_id:1, rating:1, text:"Very Bad"},
+        {user_id:2, item_id:2, rating:2, text:"Not Working"},
+        {user_id:3, item_id:3, rating:3, text:"Works for me"},
     ];
     await prisma.review.createMany({data:reviews});
     };
 
     const createComments = async()=>{
         const comments = [
-            {user_id:1, review_id:1, text:"He is right",},
-            {user_id:2, review_id:2, text:"I don't agree",},
-            {user_id:3, review_id:3, text:"Not so sure about that",},
+            {user_id:1, review_id:1, text:"He is right"},
+            {user_id:2, review_id:2, text:"I don't agree"},
+            {user_id:3, review_id:3, text:"Not so sure about that"},
         ];
     await prisma.comment.createMany({data:comments});
     };
