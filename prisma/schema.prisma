@@ -33,27 +33,27 @@ model Item {
 
 model Review {
   id        Int       @id @default(autoincrement())
-  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id   Int
-  item     Item      @relation(fields: [item_id], references: [id], onDelete: Cascade)
-  item_id   Int
-
   text      String?
   rating    Float
   createdAt DateTime  @default(now())
   updatedAt DateTime?
+
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id   Int
+  item     Item      @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  item_id   Int
 
   comments Comment[]
 }
 
 model Comment {
   id        Int       @id @default(autoincrement())
+  text      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+
   user     User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id   Int
   review   Review @relation(fields: [review_id], references: [id], onDelete: Cascade)
   review_id Int
-
-  text      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
 }
