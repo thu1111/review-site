@@ -13,53 +13,62 @@ const verifyToken = async (req,res,next)=>{
     }
 
     try {
-        const {id, username} = jwt.verify(token, process.env.JWT_SECRET);
+        const {id, username} = jwt.verify(token, process.env.JWT_SECRET); //jwt.verify(token, secretOrPublicKey, [options, callback])
         const user = await prisma.user.findUniqueOrThrow({
             where:{id}
         })
-        req.user = user;
-        res.send({message: `Hello ${username}`});
+        req.user = user; //req.user is set in verifyToken middleware
+        // res.send({message: `Hello ${username}`});
         next();
     } catch (error) {
         res.status(401).json({message: "token not valid"});
     }
 }
 
-//Register new user
+//create token function 
+const createToken = (id, username)=>{ 
+    return jwt.sign({id, username}, process.env.JWT_SECRET); 
+}; //jwt.sign(payload, secretOrPrivateKey, [options, callback])
+
+//Register new user and create token
 //POST /api/auth/register
 router.post("/register", async(req,res,next)=>{
+    const {username, password} = req.body;
+    const hashedPassword = await bcrypt.hash(password, 5);
     try {
-        const {username, password} = req.body;
-        const hashedPassword = await bcrypt.hash(password, 5);
-        const user = await prisma.user.create({
+        const newUser = await prisma.user.create({
             data:{
-                username,
+                name: username,
                 password: hashedPassword,
             }
         });
-        res.status(201).json({message: "User registered successfully"});
+        const token = createToken(newUser.id, newUser.name);
+        res.status(201).json(token);
     } catch (error) {
         next(error);
     }
 })
 
+
 //Login user
 //POST /api/auth/login
 router.post("/login", async(req,res,next)=>{
+    const {username, password} = req.body; //get username and password from request body
     try {
-        const {username, password} = req.body;
         const user = await prisma.user.findUnique({
-            where:{username}
+            where:{name: username} //find user by username
         });
-        if(!user){
-            return res.status(401).json({message: "Invalid username or password"});
+        if(!user){ //if user not found
+            return res.status(401).json({message: "Invalid username"});
         }
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        const isPasswordValid = await bcrypt.compare(password, user.password); //bcrypt.compare(plainTextPassword, hashedPassword)
         if(!isPasswordValid){
-            return res.status(401).json({message: "Invalid username or password"});
+            return res.status(401).json({message: "Invalid password"});
         }
-        const token = jwt.sign({id: user.id, username: user.username}, process.env.JWT_SECRET);
-        res.json({token});
+
+        const token = createToken(user.id, user.name);
+        res.status(201).json(token);
     } catch (error) {
         next(error);
     }
@@ -68,7 +77,7 @@ router.post("/login", async(req,res,next)=>{
 //Get logged in user
 //GET /api/auth/me 
 router.get("/me", verifyToken, (req,res)=>{
-    res.json(req.user);
+    res.status(201).json(req.user);
 });
 
 module.exports = {router, verifyToken};
